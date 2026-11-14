@@ -151,6 +151,17 @@
             "files": [
                 "SKILL.md"
             ]
+        },
+        {
+            "name": "magic-starter",
+            "description": "Opt-in Magic screens for sign-in, settings, teams, notifications, billing and support, with a view registry, theming and starter:* commands.",
+            "files": [
+                "SKILL.md",
+                "references/backend-contract.md",
+                "references/controllers-and-routes.md",
+                "references/theming.md",
+                "references/views-and-layouts.md"
+            ]
         }
     ]
 }
