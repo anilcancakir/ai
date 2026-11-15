@@ -133,7 +133,7 @@
         },
         {
             "name": "magic-local-storage",
-            "description": "Store data locally in a Magic app with SQLite: DB and Schema facades, migrations, seeders, factories, the useLocal model store and SyncFeed.",
+            "description": "Store data locally in a Magic app with SQLite: DB, Schema, migrations, seeders, factories, useLocal models and SyncFeed.",
             "files": [
                 "SKILL.md"
             ]
