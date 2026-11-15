@@ -69,7 +69,7 @@ Model attribute access in a magic app is typed through `get<T>('key')`; a bare `
 
 - Import at the top; never reference a symbol through a fully-qualified path inline.
 - In a magic app the framework arrives as `package:magic/magic.dart` and its test surface as `package:magic/testing.dart`; deep imports into `package:magic/src/...` are a finding because they bind to internals.
-- Same for Wind: `package:fluttersdk_wind/fluttersdk_wind.dart` is the only barrel.
+- Same for Wind: `package:wind_kit/wind_kit.dart` is the only barrel.
 - Unused imports are a finding (the analyzer catches them, so their presence usually means the analyzer is not being run).
 
 ## 8. Errors

@@ -1,6 +1,6 @@
 ---
 name: flutter-review
-description: "Reviews Flutter code built on the Magic and Wind stack (magic framework + Wind UI) with a subagent as an independent second pair of eyes, then fixes what it finds. Resolves scope from the active work (uncommitted changes, else the branch diff), spawns anilcancakir:flutter-reviewer or anilcancakir:flutter-reviewer-deep, verifies every returned finding against the code before showing it, and applies approved fixes with a re-review. Checks magic compliance (bootstrap, IoC, controller/view/state, models, HTTP, validation, auth, routing), Wind UI compliance (dark pairing, states over interpolation, layout contracts, dead tokens, widget choice), correctness, OOP, style, and reuse. TRIGGER when: the user asks to review, audit, or get a second opinion on Flutter code; before shipping a feature in an app that depends on magic or fluttersdk_wind; after a refactor; when a change crosses controller, view, model, or route layers. DO NOT TRIGGER when: the project has no magic or fluttersdk_wind dependency, or the user wants the code written rather than reviewed."
+description: "Reviews Flutter code built on the Magic and Wind stack (magic framework + Wind UI) with a subagent as an independent second pair of eyes, then fixes what it finds. Checks magic compliance (bootstrap, IoC, controller/view/state, models, HTTP, validation, auth, routing), Wind UI compliance (dark pairing, states over interpolation, layout contracts, dead tokens, widget choice), correctness, OOP, style, and reuse. TRIGGER when: the user asks to review, audit, or get a second opinion on Flutter code; before shipping a feature in an app that depends on magic or wind_kit; after a refactor; when a change crosses controller, view, model, or route layers. DO NOT TRIGGER when: the project has no magic or wind_kit dependency, or the user wants the code written rather than reviewed."
 when_to_use: "Any review, audit, or second-opinion request on Dart code in an app using magic or Wind: in-flight uncommitted work, a finished branch before a PR, a specific feature or path the user names, or a follow-up pass after fixes. Also when the user asks whether their controller, view, model, HTTP, validation, or auth code follows the framework properly."
 argument-hint: "[paths|uncommitted|branch|feature name] [--deep] [--no-fix]"
 ---
@@ -22,7 +22,7 @@ Take the first branch that applies:
 
 Filter the resolved list to Dart sources. Drop generated files (`*.g.dart`, `*.freezed.dart`, `_previews.g.dart`), and say how many you dropped.
 
-Confirm the project is on this stack before spawning anything: `pubspec.yaml` names `magic` or `fluttersdk_wind`. If it names neither, say so and stop; the rulebooks this review applies would be inventing rules for a project that never adopted them.
+Confirm the project is on this stack before spawning anything: `pubspec.yaml` names `magic` or `wind_kit`. If it names neither, say so and stop; the rulebooks this review applies would be inventing rules for a project that never adopted them.
 
 **Success criterion**: a concrete list of Dart files, shown to the user with its origin ("12 uncommitted files", "8 files ahead of `main`").
 
