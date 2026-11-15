@@ -12,7 +12,7 @@
 # workflow_dispatch is the manual path when a fix has to ship sooner.
 #
 # Auth: uses the anilcancakir-ai-registry GitHub App (1-hour mint-on-demand tokens) instead
-# of a personal PAT. Requires REGISTRY_BOT_APP_ID + REGISTRY_BOT_PRIVATE_KEY secrets
+# of a personal PAT. Requires REGISTRY_BOT_CLIENT_ID + REGISTRY_BOT_PRIVATE_KEY secrets
 # on each upstream repo (same values as on anilcancakir/ai).
 
 name: Dispatch skill update to registry
@@ -53,13 +53,13 @@ jobs:
 
       - name: Mint App token scoped to anilcancakir/ai
         id: app-token
-        uses: tibdex/github-app-token@v2.1.0
+        uses: actions/create-github-app-token@v3.3.0
         with:
-          app_id: ${{ secrets.REGISTRY_BOT_APP_ID }}
-          private_key: ${{ secrets.REGISTRY_BOT_PRIVATE_KEY }}
-          installation_retrieval_mode: repository
-          installation_retrieval_payload: anilcancakir/ai
-          repositories: '["ai"]'
+          client-id: ${{ secrets.REGISTRY_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.REGISTRY_BOT_PRIVATE_KEY }}
+          owner: anilcancakir
+          repositories: ai
+          permission-contents: write
 
       - name: Fire repository_dispatch to anilcancakir/ai
         uses: peter-evans/repository-dispatch@v4
