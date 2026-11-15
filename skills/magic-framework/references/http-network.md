@@ -190,9 +190,9 @@ All `Http` methods return a `MagicResponse`, which wraps the HTTP response and p
 
 | Property | Type | Description |
 |:---------|:-----|:------------|
-| `successful` | `bool` | Status code 200–299 |
+| `successful` | `bool` | Status code 200-299 |
 | `failed` | `bool` | Status code >= 400 |
-| `clientError` | `bool` | Status code 400–499 |
+| `clientError` | `bool` | Status code 400-499 |
 | `serverError` | `bool` | Status code >= 500 |
 | `unauthorized` | `bool` | Status code 401 |
 | `forbidden` | `bool` | Status code 403 |
@@ -497,14 +497,15 @@ It is a `ChangeNotifier`; listen to it directly.
 ```dart
 MagicPaginator<Invoice>.fetcher(
   fetch: (MagicPageRequest request) async {
-    final page = await Payments.getInvoices(cursor: request.cursor);
+    // `billingService` is any service of your own that pages by cursor.
+    final page = await billingService.getInvoices(cursor: request.cursor);
 
     return MagicPage<Invoice>(items: page.invoices, nextCursor: page.nextCursor);
   },
 )
 ```
 
-`MagicPage` carries the rows plus either `nextCursor` (paged by token) or `hasMore` (paged by something the paginator never sees). The request carries `cursor` AND `isFirst`; a source keeping its own page number MUST branch on `isFirst`, or a `refresh()` is indistinguishable from a `loadMore()` and renders whatever page it was up to as the whole list. A fetcher signals failure by THROWING: an `Exception` becomes `error` with the rows kept and `hasMore` untouched, an `Error` propagates because it is the fetcher being wrong. `mode` reports `PaginationMode.fetcher`.
+`MagicPage` carries the rows plus either `nextCursor` (paged by token) or `hasMore` (paged by something the paginator never sees). The request carries `cursor` and `isFirst`; a source keeping its own page number must branch on `isFirst`, or a `refresh()` is indistinguishable from a `loadMore()` and renders whatever page it was up to as the whole list. A fetcher signals failure by throwing: an `Exception` becomes `error` with the rows kept and `hasMore` untouched, an `Error` propagates because it is the fetcher being wrong. `mode` reports `PaginationMode.fetcher`.
 
 ### Mode is read, not configured
 
@@ -608,9 +609,9 @@ Magic provides a built-in `Http.fake()` API that swaps the real `NetworkDriver` 
 
 Registers a fake driver in the IoC container and returns it for assertion.
 
-- No args — all requests return 200 with `null` data.
-- `Map<String, MagicResponse>` — URL pattern to response mapping (`*` wildcard supported).
-- `FakeRequestHandler` — callback receiving `MagicRequest`, returning `MagicResponse` or `Future<MagicResponse>`. An `async` handler lets a test hold a request open while the caller acts, which is the only way to script a concurrency case.
+- No args: all requests return 200 with `null` data.
+- `Map<String, MagicResponse>` - URL pattern to response mapping (`*` wildcard supported).
+- `FakeRequestHandler`: callback receiving `MagicRequest`, returning `MagicResponse` or `Future<MagicResponse>`. An `async` handler lets a test hold a request open while the caller acts, which is the only way to script a concurrency case.
 
 ```dart
 setUp(() {
@@ -683,7 +684,7 @@ fake.assertNotSent((r) => r.method == 'DELETE');
 
 - **Null data on network errors**: `response.data` is `null` for timeouts or connection failures. Always guard before access.
 - **422 is not a failure for rendering**: A 422 response is a successful HTTP transaction (validation error). Use `response.isValidationError` to distinguish from network errors.
-- **Method spoofing for multipart**: When uploading files for a PUT/PATCH operation in Laravel, use `POST` with `'_method': 'PUT'` in the data map.
+- **Method spoofing for multipart**: For a Laravel PUT endpoint, use `POST` with `'_method': 'PUT'` in the data map. For a PATCH-only endpoint, use `POST` with `'_method': 'PATCH'`.
 - **Timeout configuration**: Default timeout is 10 seconds (10000 ms). Adjust in `config/network.dart` if needed.
 - **Response data wrapper**: Always check whether the API wraps data in a `"data"` key. Use `response['data']` or access the root depending on API design.
 - **File upload field names**: Ensure field names in the `files` map match the API's expected form field names (e.g., `'photo'`, `'attachment'`).

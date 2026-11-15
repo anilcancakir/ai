@@ -11,6 +11,7 @@ Comprehensive guide to route registration, context-free navigation, middleware, 
 - [Persistent Layouts (Shell Routes)](#persistent-layouts-shell-routes)
 - [Route Transitions](#route-transitions)
 - [Stacking and the Back Button](#stacking-and-the-back-button)
+- [Bottom Sheet Routes](#bottom-sheet-routes)
 - [Context-Free Navigation](#context-free-navigation)
 - [Path & Query Parameters](#path--query-parameters)
 - [Named Routes](#named-routes)
@@ -168,7 +169,7 @@ MagicRoute.resource('teams', TeamRoutes(), except: ['edit']);       // all excep
 ```
 
 Resolution rules:
-- `name` is normalized — collapses repeated slashes, strips leading/trailing slashes.
+- `name` is normalized: collapses repeated slashes, strips leading/trailing slashes.
 - `only` / `except` narrow the set further, but only **within** `resourceMethods` (so a controller that lists `['index', 'show']` cannot expose `edit` even via `only`).
 - Unknown method names in `only` or `except` throw `ArgumentError` at registration time, not at navigation.
 
@@ -209,7 +210,7 @@ MagicRoute.layout(
 );
 ```
 
-Multiple layout groups with the same ID merge their routes under a single layout shell: children are concatenated in registration order and the first builder wins. A layout without an ID is its own shell. Shells are emitted in registration order of their first group, and go_router tries them in that order.
+Multiple layout groups with the same ID merge their routes under a single layout shell: children are concatenated in registration order and the first builder wins. A layout without an ID is its own shell. Shells are emitted in registration order of their first group, after every top-level route, and go_router tries them in that order. The routes passed to `MagicRoute.layout` leave the top-level table and live under the layout only; an overlay route in the list opens on the root navigator instead. go_router takes the first match, so a catch-all such as `MagicRoute.page('/:slug', ...)` captures every path it can match that is tried after it: at the top level it shadows every layout page, and last in an app shell it still captures `/login` from a guest shell registered later. Register a catch-all after every route it could shadow, in the last shell tried.
 
 ### Above Every Route: `MagicApplication.builder`
 
@@ -265,7 +266,7 @@ MagicApplication(
 )
 ```
 
-Applied with `copyWith`, so the Wind theme is otherwise untouched, and null changes nothing. A per-route value cannot express the case this exists for: the transition is chosen once at registration, and what an app usually wants is the native animation on mobile and none on desktop or web.
+Applied with `copyWith`, so the `wind_kit` theme is otherwise untouched, and null changes nothing. A per-route value cannot express the case this exists for: the transition is chosen once at registration, and what an app usually wants is the native animation on mobile and none on desktop or web.
 
 A partial map is a partial override. A platform left out of `builders` keeps its own default, so omitting `TargetPlatform.iOS` leaves the Cupertino slide and its swipe in place; what removes the gesture is naming iOS and giving it a different builder.
 
@@ -313,15 +314,15 @@ MagicRoute.page('/stock/add', () => AddItemSheet())
     .overlay(base: '/stock', canDismiss: () => !form.isDirty);
 ```
 
-- `to()` ALWAYS PUSHES the sheet over the page on screen, including from a deep link handler or a post-login intended-URL redirect; `back()`, Android back and browser Back return to that page with its state. The address bar shows the sheet's URL.
-- A replacing arrival (initial location, platform route information such as a reload, go_router `go()`) builds `base` first, then pushes the sheet in the next frame. `MagicRoute.replace(overlay)` is NOT a cold entry (it can replace the only page).
-- `base` is the FULL path of a registered page route (group prefix included). Parameters are allowed and filled from the overlay location, so the overlay path must declare them all (`/locations/:id/count` over `/locations/:id`). Unknown base, overlay base, or a missing parameter throws a `StateError` when the router builds.
+- `to()` always pushes the sheet over the page on screen, including from a deep link handler or a post-login intended-URL redirect; `back()`, Android back and browser Back return to that page with its state. The address bar shows the sheet's URL.
+- A replacing arrival (initial location, platform route information such as a reload, go_router `go()`) builds `base` first, then pushes the sheet in the next frame. `MagicRoute.replace(overlay)` is not a cold entry (it can replace the only page).
+- `base` is the full path of a registered page route (group prefix included). Parameters are allowed and filled from the overlay location, so the overlay path must declare them all (`/locations/:id/count` over `/locations/:id`). Unknown base, overlay base, or a missing parameter throws a `StateError` when the router builds.
 - `canDismiss` is asked before every close (scrim, drag, system back, browser Back, `back()`, a `to()` that replaces the stack; a `to()` to a `stacked()` route pushes over the sheet and asks nothing); `false` turns scrim and drag off and keeps the sheet. A drag allowed before the guard turned slides back up. A refused browser Back keeps the sheet and its URL.
 - Web history (measured in Chrome only): a cold load on the sheet's URL leaves `[base, sheet]`, so Back #1 closes the sheet and Back #2 leaves, best effort until the user interacts (Chrome's real Back may skip a script-added entry; Playwright's `goBack` does not test that); a reload with the sheet open leaves `base` twice. Closing with `MagicRoute.back()`, the scrim or a drag steps the browser back; `Navigator.pop` adds an entry, so close a sheet with `MagicRoute.back()` and leave it with `MagicRoute.back(); MagicRoute.to(...)`. A panel's `PopScope(canPop: false)` keeps a scrim tap or Escape off the browser; a `DraggableScrollableSheet` closing at its min extent adds an entry. A `replace()` or query swap gives up the page's claim; a step back unanswered for 1 s is given up and the page stays.
 - A guarded sheet has a go_router `onExit` on every platform: never `popUntil` over it (it does not terminate), and a navigation issued while it is on top runs one event later.
 - Frame only: a `ModalBottomSheetRoute` on the ROOT navigator, `backgroundColor: Colors.transparent`, `isScrollControlled: true`, no drag handle, no safe area, no `constraints` (M3 640dp cap). Same frame as `showModalBottomSheet(..., useRootNavigator: true)`, so a self-styled panel (`MSBottomSheet`) gets the same frame by URL or by hand. No captured themes: the sheet inherits app-level themes, not a layout's local `Theme`/`DefaultTextStyle`. Do not wrap the panel in a `Scaffold`.
-- Dialog instead of sheet: `MagicRoute.useOverlayPresentation((context) => ... ? MagicOverlayPresentation.dialog : MagicOverlayPresentation.sheet)`, installed once in a provider. Asked ONCE per open with the root navigator's context (has `MediaQuery`); an open frame never swaps. No resolver = sheet. Magic has no breakpoint logic, the app decides. The dialog is a `DialogRoute` (root navigator, sheet's scrim colour, `useSafeArea: false`, no themes) that puts a transparent `Material` above the panel, so a bare `Text` or `WText` gets the theme text style as it does in the sheet and the scrim still takes taps: the panel draws its own dialog surface and size. URL, cold entry, `canDismiss` (scrim + Escape off while false) and browser-history steps are identical; no drag. `MagicRouter.reset()` clears the resolver.
-- Declared inside a layout group, it keeps prefix and middleware but opens above the shell, and it is matched BEFORE the layout's pages (so it beats a trailing `/:path(.*)` catch-all). An overlay path must not also match a page path. `transition()`, `stacked()`, `swipeBack()` do not apply.
+- Dialog instead of sheet: `MagicRoute.useOverlayPresentation((context) => ... ? MagicOverlayPresentation.dialog : MagicOverlayPresentation.sheet)`, installed once in a provider. Asked once per open with the root navigator's context (has `MediaQuery`); an open frame never swaps. No resolver = sheet. Magic has no breakpoint logic, the app decides. The dialog is a `DialogRoute` (root navigator, sheet's scrim colour, `useSafeArea: false`, no themes) that puts a transparent `Material` above the panel, so a bare `Text` or `WText` gets the theme text style as it does in the sheet and the scrim still takes taps: the panel draws its own dialog surface and size. URL, cold entry, `canDismiss` (scrim + Escape off while false) and browser-history steps are identical; no drag. `MagicRouter.reset()` clears the resolver.
+- Declared inside a layout group, it keeps prefix and middleware but opens above the shell, and it is matched before the layout's pages (so it beats a trailing `/:path(.*)` catch-all). An overlay path must not also match a page path. `transition()`, `stacked()`, `swipeBack()` do not apply.
 
 ## Context-Free Navigation
 
@@ -346,7 +347,7 @@ MagicRoute.toNamed('users.show', params: {'id': '42'});
 // `to()` on a `.stacked()` route behaves the same way.
 MagicRoute.push('/details');
 
-// Go back (works across shell routes — history-based fallback automatic)
+// Go back (works across shell routes: history-based fallback automatic)
 MagicRoute.back();
 
 // Go back with explicit fallback when history stack is empty
@@ -374,7 +375,7 @@ final id = MagicRouter.instance.pathParameterOf(context, 'id');
 final query = MagicRouter.instance.queryParameterOf(context, 'q');
 
 // No BuildContext (controller, middleware): the static readers answer for the
-// page built LAST. A page pushed across layout shells is built before the shell
+// page built last. A page pushed across layout shells is built before the shell
 // under it, so under shells they can return the other page's parameters.
 final staticId = MagicRouter.instance.pathParameter('id');
 final staticQuery = MagicRouter.instance.queryParameter('q');
@@ -507,16 +508,17 @@ class RouteServiceProvider extends ServiceProvider {
 
   @override
   void register() {
-    registerKernel();      // Register middleware
-    registerAppRoutes();   // Register routes
+    registerKernel(); // Middleware aliases: synchronous, no other service needed
   }
 
   @override
   Future<void> boot() async {
-    // Async initialization if needed
+    registerAppRoutes(); // Routes go in boot(), as the magic:install stub writes them
   }
 }
 ```
+
+`register()` only binds; routes go in `boot()`, after every provider has registered, and before the router pre-builds at the end of `Magic.init()`.
 
 Then define routes in a dedicated file:
 
@@ -619,7 +621,7 @@ Flutter web defaults to hash-based URLs (`/#/path`). Set `url_strategy` in routi
 
 ```dart
 'routing': {
-  'url_strategy': 'path', // 'path' | 'hash' | null (default: null — hash strategy)
+  'url_strategy': 'path', // 'path' | 'hash' | null (default: null - hash strategy)
 },
 ```
 
@@ -690,25 +692,25 @@ final title = MagicRoute.currentTitle; // without suffix
 
 ### Resolution Priority
 
-1. `MagicTitle` / `MagicRoute.setTitle()` — override
-2. `RouteDefinition.title()` — route-level
-3. `MagicApplication.title` — fallback
+1. `MagicTitle` / `MagicRoute.setTitle()`: override
+2. `RouteDefinition.title()`: route-level
+3. `MagicApplication.title`: fallback
 
 ### TitleManager (Internal)
 
-- `TitleManager.instance` — singleton, lazy-initialized
+- `TitleManager.instance`: singleton, lazy-initialized
 - `TitleManager.configure(onTitleChanged: callback)`: injectable callback for testing; it receives the title and the ARGB switcher color
 - `TitleManager.instance.setPrimaryColor(color)`: the task-switcher color; `MagicApplication` sets it from `theme.primaryColor`, and `0` (system default) is sent until it is set, because Android rejects a null color
-- `TitleManager.reset()` — clears state, called by `MagicRouter.reset()`
-- Route listener: `GoRouter.routerDelegate.addListener` — fires on all navigation types
+- `TitleManager.reset()`: clears state, called by `MagicRouter.reset()`
+- Route listener: `GoRouter.routerDelegate.addListener` - fires on all navigation types
 
 ## Gotchas
 
 - **Observer Registration Timing:** Observers must be added before `routerConfig` is accessed, same as routes. Register in `RouteServiceProvider.boot()`.
-- **Route Registration Timing:** Routes must be registered during `ServiceProvider.register()` or `boot()`. They cannot be added after `MagicRouter.instance.routerConfig` is accessed.
+- **Route Registration Timing:** Register routes in a provider's `boot()`. They cannot be added after `MagicRouter.instance.routerConfig` is first read: that read builds the router, so a `boot()` that reads it before `RouteServiceProvider.boot()` freezes the router early.
 - **Middleware Next Required:** Middleware must call `next()` to allow the request to proceed. Failing to call it halts the pipeline.
 - **Path Parameters:** Parameters are injected by position into the handler function. Ensure the function signature matches the number of parameters in the route.
 - **Named Routes:** Only use named navigation if the route was explicitly named with `.name()`.
-- **Replace vs. To:** `replace()` leaves history untouched — `back()` still returns to the route before the replaced one. Use for login redirects and splash screens where the replaced route should not appear in back navigation.
+- **Replace vs. To:** `replace()` leaves history untouched - `back()` still returns to the route before the replaced one. Use for login redirects and splash screens where the replaced route should not appear in back navigation.
 - **back() across shells:** `MagicRoute.back()` works across shell (layout) routes. Magic tracks navigation history automatically via `to()` and `toNamed()` on an unstacked route; a stacked one records nothing, because the pushed page IS the record and `back()` prefers the native pop. Use `fallback:` for guaranteed behavior when history is empty: `MagicRoute.back(fallback: '/home')`.
 - **Intended URL Cleanup:** `pullIntendedUrl()` is a one-time read that clears the stored URL. Call it only once per login flow.
