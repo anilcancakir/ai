@@ -5,21 +5,32 @@
 # execute it in anilcancakir/ai. Copy it into the upstream repo's .github/workflows/
 # directory and replace <SOURCE_NAME> with the key registry-sources.json has for the repo.
 #
-# Fires on a published release only. An earlier version of this template also
-# fired on every push touching the skill path, which cost the registry a version
-# per commit: it reached v1.3.75, most of those re-publishing identical skill
-# content. Skill edits now ride the release that carries them, and
-# workflow_dispatch is the manual path when a fix has to ship sooner.
+# Called by the upstream's publish.yml after its github-release job, so the
+# dispatch happens only after pub.dev has accepted the release; or run by hand. It
+# is NOT triggered by `release: [published]`: the release is created under the
+# default GITHUB_TOKEN, and GitHub starts no workflow run from an event raised by
+# that token, so such a trigger never fires. The registry's sync.yml receives the
+# repository_dispatch, pulls the skill subtree that registry-sources.json names,
+# bumps the version triplet, and pushes to master.
 #
-# Auth: uses the anilcancakir-ai-registry GitHub App (1-hour mint-on-demand tokens) instead
-# of a personal PAT. Requires REGISTRY_BOT_CLIENT_ID + REGISTRY_BOT_PRIVATE_KEY secrets
+# Deliberately NOT on every push. A skill edit that lands on master between
+# releases waits for the release that carries it, so the registry version
+# tracks published packages instead of counting commits. Reach for the manual
+# run when a skill fix has to arrive before the next release.
+#
+# Auth: uses the registry GitHub App (1-hour mint-on-demand tokens) instead of a
+# personal PAT. Requires REGISTRY_BOT_CLIENT_ID + REGISTRY_BOT_PRIVATE_KEY secrets
 # on each upstream repo (same values as on anilcancakir/ai).
 
 name: Dispatch skill update to registry
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    secrets:
+      REGISTRY_BOT_CLIENT_ID:
+        required: true
+      REGISTRY_BOT_PRIVATE_KEY:
+        required: true
   workflow_dispatch:
 
 permissions:
@@ -29,9 +40,10 @@ jobs:
   dispatch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Extract version
         id: ver
@@ -53,7 +65,7 @@ jobs:
 
       - name: Mint App token scoped to anilcancakir/ai
         id: app-token
-        uses: actions/create-github-app-token@v3.3.0
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ secrets.REGISTRY_BOT_CLIENT_ID }}
           private-key: ${{ secrets.REGISTRY_BOT_PRIVATE_KEY }}
@@ -62,7 +74,7 @@ jobs:
           permission-contents: write
 
       - name: Fire repository_dispatch to anilcancakir/ai
-        uses: peter-evans/repository-dispatch@v4
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4
         with:
           token: ${{ steps.app-token.outputs.token }}
           repository: anilcancakir/ai
