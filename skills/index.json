@@ -162,6 +162,13 @@
                 "references/theming.md",
                 "references/views-and-layouts.md"
             ]
+        },
+        {
+            "name": "magic-devtools",
+            "description": "Wire tapir and crumbs into a Magic app with magic_devtools, and keep the wiring out of release builds.",
+            "files": [
+                "SKILL.md"
+            ]
         }
     ]
 }
