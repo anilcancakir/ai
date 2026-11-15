@@ -53,6 +53,12 @@
         "skill": "magic-devtools",
         "replaces": []
     },
+    "magic_devtools": {
+        "repo": "anilcancakir/magic_devtools",
+        "branch": "master",
+        "skill": "magic-devtools",
+        "replaces": []
+    },
     "magic_encryption": {
         "repo": "anilcancakir/magic_encryption",
         "branch": "master",
