@@ -22,7 +22,7 @@ Take the first branch that applies:
 
 Filter the resolved list to Dart sources. Drop generated files (`*.g.dart`, `*.freezed.dart`, `_previews.g.dart`), and say how many you dropped.
 
-Confirm the project is on this stack before spawning anything: `pubspec.yaml` names `magic` or `fluttersdk_wind`. If it names neither, say so and stop; the rulebooks this review applies would be inventing rules for a project that never adopted them.
+Confirm the project is on this stack before spawning anything: `pubspec.yaml` names `magic` or `wind_kit`. If it names neither, say so and stop; the rulebooks this review applies would be inventing rules for a project that never adopted them.
 
 **Success criterion**: a concrete list of Dart files, shown to the user with its origin ("12 uncommitted files", "8 files ahead of `main`").
 

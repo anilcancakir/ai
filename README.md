@@ -33,7 +33,7 @@ AI coding assistants are strong, but they do not know your frameworks: they inve
 | Registry | `https://anilcancakir.github.io/ai/` (GitHub Pages, `skills/index.json`) |
 | Install | `npx skills add anilcancakir/ai` |
 | Claude Code plugin | `anilcancakir@anilcancakir-marketplace` |
-| Skills | `wind-ui`, `magic-framework`, `dowel`, `tapir`, `crumbs`, plus the owned `flutter-review` |
+| Skills | The 16 mirrored skills in [Skills](#skills), plus the owned `flutter-review` |
 | Subagents and commands | `anilcancakir:flutter-reviewer`, `anilcancakir:flutter-reviewer-deep`, `/anilcancakir:flutter-test` |
 | Tools served | OpenCode, Claude Code, Cursor, Gemini CLI, Codex CLI, Antigravity CLI, Cline, Roo Code |
 | Freshness | A source repo publishes a release, `sync.yml` mirrors its `skills/<name>/` here and bumps the registry version |
@@ -69,7 +69,7 @@ Moving from the old `fluttersdk@fluttersdk-marketplace` install: remove that mar
 
 The plugin registers:
 
-- the skills (`/anilcancakir:wind-ui`, `/anilcancakir:magic-framework`, `/anilcancakir:tapir`, `/anilcancakir:crumbs`, `/anilcancakir:dowel`)
+- every mirrored skill as `/anilcancakir:<skill>` (`/anilcancakir:wind-ui`, `/anilcancakir:magic-framework`, ...)
 - `/anilcancakir:flutter-review`, a review that runs in a subagent as an independent second pair of eyes and then fixes what it finds, plus `/anilcancakir:flutter-test`
 - the `anilcancakir:flutter-reviewer` and `anilcancakir:flutter-reviewer-deep` subagents, invokable with `@`
 - the bundled MCP server from `.mcp.json` (HTTP transport to `mcp.anilcancakir.com`)
@@ -133,13 +133,24 @@ bash scripts/install.sh --project               # into the current Flutter proje
 
 | Skill | Source repo | What it covers |
 |:------|:------------|:---------------|
-| `wind-ui` | [anilcancakir/wind_kit](https://github.com/anilcancakir/wind_kit) | W-prefix widgets, the `className` parser pipeline, `WindRecipe` variants, dark mode, responsive breakpoints |
-| `magic-framework` | [anilcancakir/magic](https://github.com/anilcancakir/magic) | IoC container, 18 facades, Eloquent ORM, GoRouter routing, forms, auth, testing |
-| `tapir` | [anilcancakir/tapir](https://github.com/anilcancakir/tapir) | E2E driver: tools and CLI commands to snap, tap, type and screenshot a running Flutter app |
-| `crumbs` | [anilcancakir/crumbs](https://github.com/anilcancakir/crumbs) | Runtime inspector: HTTP, logs, exceptions, events, gates and DB queries captured in memory and read over MCP |
-| `dowel` | [anilcancakir/dowel](https://github.com/anilcancakir/dowel) | CLI framework and stdio MCP server: start, reload, inspect and tinker a running app |
+| `wind-ui` | [anilcancakir/wind_kit](https://github.com/anilcancakir/wind_kit) | Tailwind-syntax `className`, W-widgets, `dark:` pairs, stacked prefixes, `WindRecipe` and `WDynamic` |
+| `magic-framework` | [anilcancakir/magic](https://github.com/anilcancakir/magic) | IoC container, 13 facades, Eloquent-style ORM, service providers, reactive controllers, GoRouter routing, validation and auth |
+| `tapir` | [anilcancakir/tapir](https://github.com/anilcancakir/tapir) | Driving, verifying and profiling a running Flutter app from an agent |
+| `crumbs` | [anilcancakir/crumbs](https://github.com/anilcancakir/crumbs) | Reading the HTTP, logs, exceptions and events a running Flutter app captured |
+| `dowel` | [anilcancakir/dowel](https://github.com/anilcancakir/dowel) | Starting, hot reloading and inspecting a running Flutter app with `dowel_*` MCP tools and the `./bin/dowel` CLI |
+| `magic-device` | [anilcancakir/magic_device](https://github.com/anilcancakir/magic_device) | Gating background work on mains power and viewer idle, and macOS window fullscreen |
+| `magic-notifications` | [anilcancakir/magic_notifications](https://github.com/anilcancakir/magic_notifications) | The `Notify` facade, a backend-driven inbox, OneSignal push and realtime delivery |
+| `magic-deeplink` | [anilcancakir/magic_deeplink](https://github.com/anilcancakir/magic_deeplink) | Routing Universal Links, App Links and tapped pushes to Magic routes |
+| `magic-socket` | [anilcancakir/magic_socket](https://github.com/anilcancakir/magic_socket) | Real-time broadcasts with the `Echo` facade, Reverb and null drivers, private and presence channels |
+| `magic-sentry` | [anilcancakir/magic_sentry](https://github.com/anilcancakir/magic_sentry) | Sentry booted before `Magic.init`, HTTP failure reports, the tracked user and masked URL tokens |
+| `magic-picker` | [anilcancakir/magic_picker](https://github.com/anilcancakir/magic_picker) | Picking files, images and videos with the `Pick` facade, and sharing downloads |
+| `magic-encryption` | [anilcancakir/magic_encryption](https://github.com/anilcancakir/magic_encryption) | Encrypting strings with the `Crypt` facade and an `APP_KEY` or a Vault-backed device key |
+| `magic-local-storage` | [anilcancakir/magic_local_storage](https://github.com/anilcancakir/magic_local_storage) | SQLite through the `DB` and `Schema` facades, migrations, seeders, factories, `useLocal` models and `SyncFeed` |
+| `magic-payments` | [anilcancakir/magic_payments](https://github.com/anilcancakir/magic_payments) | Entitlement reads and web or store purchases through the `Payments` facade |
+| `magic-social-auth` | [anilcancakir/magic_social_auth](https://github.com/anilcancakir/magic_social_auth) | Google, Apple, GitHub and Microsoft sign-in through native sheets or a PKCE browser flow |
+| `magic-starter` | [anilcancakir/magic_starter](https://github.com/anilcancakir/magic_starter) | Opt-in screens for sign-in, settings, teams, notifications, billing and support, with a view registry and theming |
 
-`dowel` replaced `fluttersdk-artisan` on its first sync (v1.4.85); `tapir` replaced `fluttersdk-dusk` and `crumbs` replaced `fluttersdk-telescope` the same way, and the old directories and index entries left with them. The synced version is the `version:` field in `skills/<name>/SKILL.md`, and [`skills/index.json`](skills/index.json) is the machine-readable index. Full descriptions: [docs/SKILLS.md](docs/SKILLS.md).
+A seventeenth skill, `magic-devtools`, arrives with the next release of [anilcancakir/magic_devtools](https://github.com/anilcancakir/magic_devtools). `dowel` replaced `fluttersdk-artisan` on its first sync (v1.4.85); `tapir` replaced `fluttersdk-dusk` and `crumbs` replaced `fluttersdk-telescope` the same way, and the old directories and index entries left with them. The synced version is the `version:` field in `skills/<name>/SKILL.md`, and [`skills/index.json`](skills/index.json) is the machine-readable index. Full descriptions: [docs/SKILLS.md](docs/SKILLS.md).
 
 ## MCP server
 
