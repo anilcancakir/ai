@@ -98,7 +98,7 @@
         },
         {
             "name": "magic-deeplink",
-            "description": "Route Universal Links, App Links and tapped pushes to Magic routes with magic_deeplink: handler chain, RouteDeeplinkHandler and the deeplink: commands.",
+            "description": "Route Universal Links, App Links and tapped pushes to Magic routes with the magic_deeplink handler chain.",
             "files": [
                 "SKILL.md"
             ]
