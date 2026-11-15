@@ -46,7 +46,7 @@ The Laravel-inspired core of a Magic app: the IoC container, 13 facades (`Auth`,
 
 `DB`, `Schema`, `Echo`, `Pick` and `Crypt` are not core facades. The SQLite, broadcasting, picker and encryption layers are plugins, each with its own skill below.
 
-The CLI runs as `dart run magic:dowel <command>`: `magic:install`, the 17 core generators, and the design commands `make:component`, `previews:refresh`, `design:sync` and `design:lint`. `key:generate` comes from `magic_encryption`; `make:migration`, `make:seeder` and `make:factory` come from `magic_local_storage`.
+The CLI runs as `dart run magic:dowel <command>`: `magic:install`, the 17 core `make:*` generators (`make:component` among them), and the design commands `previews:refresh`, `design:sync` and `design:lint`. `key:generate` comes from `magic_encryption`; `make:migration`, `make:seeder` and `make:factory` come from `magic_local_storage`.
 
 Twenty-five reference files, including one per ecosystem plugin: `magic_deeplink`, `magic_device`, `magic_devtools`, `magic_encryption`, `magic_local_storage`, `magic_notifications`, `magic_payments`, `magic_picker`, `magic_sentry`, `magic_social_auth`, `magic_socket`, `magic_starter`.
 
