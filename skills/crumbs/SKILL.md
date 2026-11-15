@@ -1,11 +1,11 @@
 ---
 name: crumbs
 description: "Read the HTTP, logs, exceptions and events a running Flutter app captured, with crumbs."
-version: 1.0.0
+version: 1.0.1
 when_to_use: "Use when calling crumbs_* tools or crumbs:* commands to see what a running Flutter app did; driving the UI is tapir, app lifecycle is dowel."
 ---
 
-<!-- crumbs v1.0.0 | Skill updated: 2026-11-14 -->
+<!-- crumbs v1.0.1 | Skill updated: 2026-11-15 -->
 
 # crumbs
 
@@ -45,7 +45,7 @@ On a Magic app it also adds `MagicCrumbsIntegration.install()` (from `package:ma
 2. **Each buffer has one producer, and most are opt-in.** An empty answer means "no producer" until you know one is registered:
 
    | Buffer | Read with | Filled by |
-   |---|---|---|
+   |:---|:---|:---|
    | logs | `crumbs_tail` | `LogWatcher`, installed by `CrumbsPlugin.install()`; only `package:logging` calls |
    | HTTP | `crumbs_requests` | a `CrumbsHttpAdapter`, or the app's own interceptor calling `CrumbsStore.recordHttp`; crumbs hooks no HTTP client itself |
    | exceptions | `crumbs_exceptions` | `ExceptionWatcher`: uncaught errors from `FlutterError.onError` and `PlatformDispatcher.instance.onError` |
@@ -64,7 +64,7 @@ On a Magic app it also adds `MagicCrumbsIntegration.install()` (from `package:ma
 6. **`limit` keeps the newest N; `level` is a minimum.** Omit `limit` over MCP for the whole buffer; the CLI defaults to 50. A `limit` that is not a number reads the whole buffer, zero or below reads nothing. `crumbs_tail { level: "WARNING" }` keeps WARNING, SEVERE and SHOUT; an unknown level name matches nothing, so an empty answer after a typo is the typo.
 7. **Page logs and events with the cursor.** `crumbs_tail` and `crumbs_events` (and their commands) take `since`, an `atUs` in microseconds, exclusive, and answer `cursor`, the largest `atUs` returned (or the `since` you gave when nothing is newer). Pass it back as `since` to read only newer records. With `since`, `limit` keeps the oldest N after it, plus any records sharing the last `atUs`, so paging is exact for the records that exist when the page is read; a record added later with the same microsecond `atUs` as the page's last record can be missed. `logger` (exact name, logs) and `type` (event type prefix) narrow further; the tool schemas declare all of them (`crumbs_tail`: `limit`, `level`, `logger`, `since`; `crumbs_events`: `limit`, `type`, `since`). A non-integer `since` is refused with `invalidParams` (the CLI exits 3).
 8. **`--follow` streams.** `crumbs:tail --follow` and `crumbs:events --follow` re-read every second from the last cursor until interrupted; run them in the background while driving the app, with `--json` for one object per line.
-9. **Join across buffers on `atUs`,** the monotonic clock every record but exceptions, dumps and gates carries; `time` and `timestamp` are wall clock, for display. `interactionId` with `linkedBy` (`zone`, `frame`, `window`) appear when the capturing site links records to one interaction.
+9. **Join across buffers on `atUs`,** the monotonic clock every record but exceptions, dumps and gates carries; `time` and `timestamp` are wall clock, for display. `interactionId` with `linkedBy` (`zone`, `frame`, `window`) are set when the capturing site ties a record to one interaction; `window` means no interaction was open and `interactionId` is null, so match those by `atUs` values that fall close together: each record stamps its own `atUs`, and a nearby value does not prove a shared cause.
 
 ### Redaction and the timeline on disk
 
@@ -138,7 +138,7 @@ In CI, run the CLI against a started app and read with `--json`; a read command 
 ## References
 
 | Read when | File |
-|---|---|
+|:---|:---|
 | Calling a `crumbs_*` tool and you need its parameters, envelope or errors | `${CLAUDE_SKILL_DIR}/references/mcp-tools.md` |
 | Running a `crumbs:*` command from Bash: flags, output, exit codes | `${CLAUDE_SKILL_DIR}/references/cli-commands.md` |
 | Reading the fields of a record | `${CLAUDE_SKILL_DIR}/references/records.md` |
