@@ -4,9 +4,11 @@
 
 This guide is for the maintainer wiring auto-sync between upstream skill source repos
 (wind_kit, magic, dowel, tapir, crumbs and the Magic plugins) and the registry (anilcancakir/ai).
-Each upstream repo needs one workflow file and one secret. Once in place, a published
-release fires `repository_dispatch` to anilcancakir/ai, triggering `sync.yml` to pull the
-updated skill subtree and commit it to master.
+Each upstream repo needs one workflow file, a `registry` job in its `publish.yml` and two
+secrets. Once in place, a stable release tag runs that job after pub.dev has accepted the
+package; it fires `repository_dispatch` to anilcancakir/ai, triggering `sync.yml` to pull the
+updated skill subtree and commit it to master. (A `release: published` trigger would never
+fire: the release is created under `GITHUB_TOKEN`, which starts no workflow runs.)
 
 **Release-scoped on purpose.** The dispatch does not fire on ordinary pushes. It used to,
 and the registry paid a version per commit for it: v1.3.75, most of those re-publishing
@@ -71,7 +73,19 @@ cp docs/templates/upstream-dispatch-template.yml \
 
 The template lives under `docs/templates/` (not `.github/workflows/`) so GitHub does not
 execute it inside anilcancakir/ai. Once copied into an upstream repo's `.github/workflows/`
-directory, it becomes a live workflow there.
+directory, it becomes a live workflow there. It is a reusable workflow (`workflow_call`),
+so the upstream's `publish.yml` calls it as a job after `github-release`:
+
+```yaml
+  registry:
+    name: Sync skill to registry
+    needs: [validate, github-release]
+    if: ${{ needs.validate.outputs.prerelease != 'true' }}
+    uses: ./.github/workflows/dispatch-to-registry.yml
+    secrets:
+      REGISTRY_BOT_CLIENT_ID: ${{ secrets.REGISTRY_BOT_CLIENT_ID }}
+      REGISTRY_BOT_PRIVATE_KEY: ${{ secrets.REGISTRY_BOT_PRIVATE_KEY }}
+```
 
 **c. Replace the one placeholder** in the copied file:
 
@@ -86,7 +100,7 @@ reason.
 
 **d. Commit and push** to the upstream's default branch:
 ```bash
-git add .github/workflows/dispatch-to-registry.yml
+git add .github/workflows/dispatch-to-registry.yml .github/workflows/publish.yml
 git commit -m "chore: add registry dispatch workflow"
 git push
 ```
@@ -107,8 +121,8 @@ git push
 - The template lives at `docs/templates/upstream-dispatch-template.yml`, outside the
   `.github/workflows/` directory, so GitHub does not load it as a workflow in anilcancakir/ai.
   It only becomes active when copied into an upstream repo's `.github/workflows/` directory.
-- On a `release: published` event the checkout lands on the release tag, so `Extract version`
-  reads the released `pubspec.yaml`. These packages tag without a `v` prefix, so the
+- When `publish.yml` calls the workflow, the checkout lands on the release tag, so `Extract
+  version` reads the released `pubspec.yaml`. These packages tag without a `v` prefix, so the
   `^v[0-9]` branch of that step does not match and the pubspec fallback is the live path;
   both shapes resolve to the same string. A manual run from the default branch reads that
   branch's pubspec instead, which is what you want for an unreleased skill fix.
