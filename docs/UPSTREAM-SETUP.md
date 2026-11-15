@@ -21,7 +21,7 @@ Add these secrets to **anilcancakir/ai** (Settings → Secrets and variables →
 
 | Secret | What it contains |
 |---|---|
-| `REGISTRY_BOT_APP_ID` | GitHub App ID (`anilcancakir-ai-registry`: `contents: write` + `metadata: read`, installed on `anilcancakir/ai` only) |
+| `REGISTRY_BOT_CLIENT_ID` | GitHub App Client ID, the `Iv...` value on the App settings page (`anilcancakir-ai-registry`: `contents: write` + `metadata: read`, installed on `anilcancakir/ai` only) |
 | `REGISTRY_BOT_PRIVATE_KEY` | Private key (PEM) for that GitHub App |
 
 The App is installed on `anilcancakir/ai` and nowhere else. `sync.yml` mints one token
@@ -57,7 +57,7 @@ on its first sync (for example `fluttersdk-artisan` when `dowel` syncs for the f
 A dispatch whose `source` is not a key in that file is rejected before anything is checked out.
 
 **a. Add App secrets to the upstream repo.** Settings → Secrets → Actions → New repository secret:
-- `REGISTRY_BOT_APP_ID` = same App ID as on anilcancakir/ai
+- `REGISTRY_BOT_CLIENT_ID` = same App Client ID as on anilcancakir/ai
 - `REGISTRY_BOT_PRIVATE_KEY` = same PEM content as on anilcancakir/ai
 
 No personal access tokens. The App is installed only on `anilcancakir/ai`; each upstream just

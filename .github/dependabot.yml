@@ -33,9 +33,8 @@ updates:
           actions-official:
               patterns:
                   - actions/*
-          # App-token + repository-dispatch: keep moving together because they
-          # ship in the same auto-sync workflow.
+          # Repository dispatch ships in the same auto-sync workflow as the App
+          # token action (which falls under actions-official above).
           sync-auth-stack:
               patterns:
-                  - tibdex/github-app-token
                   - peter-evans/*
