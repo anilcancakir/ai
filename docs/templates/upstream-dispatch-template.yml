@@ -13,10 +13,12 @@
 # repository_dispatch, pulls the skill subtree that registry-sources.json names,
 # bumps the version triplet, and pushes to master.
 #
-# Deliberately NOT on every push. A skill edit that lands on master between
-# releases waits for the release that carries it, so the registry version
-# tracks published packages instead of counting commits. Reach for the manual
-# run when a skill fix has to arrive before the next release.
+# Deliberately NOT on every push. Each release dispatch starts one sync, so the
+# registry version tracks published packages instead of counting commits. The
+# sync copies the upstream branch tip at sync time, not the released commit (the
+# dispatched sha only appears in the release notes), so a skill edit merged
+# after a release can ship before the next release. Use the manual run when a
+# skill fix must ship before that release.
 #
 # Auth: uses the registry GitHub App (1-hour mint-on-demand tokens) instead of a
 # personal PAT. Requires REGISTRY_BOT_CLIENT_ID + REGISTRY_BOT_PRIVATE_KEY secrets
