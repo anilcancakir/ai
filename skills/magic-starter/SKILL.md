@@ -1,8 +1,8 @@
 ---
 name: magic-starter
-description: "Opt-in Magic screens for sign-in, settings, teams, notifications, billing and support, with a view registry, theming and starter:* commands."
-version: 1.0.0
-when_to_use: "Use when code imports package:magic_starter or touches MagicStarter, MagicStarterConfig, a starter view key, an MS component or a starter:* command."
+description: "Build with magic_starter: opt-in Magic screens for sign-in, settings, teams, billing and support, plus the view registry."
+version: 1.1.0
+when_to_use: "Use when code imports package:magic_starter or touches MagicStarter, a starter view key, an MS component or a starter:* command."
 ---
 
 # magic_starter
@@ -34,7 +34,7 @@ Requires Dart >=3.13, Flutter >=3.47 and `magic` ^1.0.0, in an app already scaff
 
 1. A toggle is read when the manager is first resolved: a feature that is off registers no route and no view key, so `MagicStarter.view.make(key)` throws `StateError`. Guard links and builds with `MagicStarterConfig.has<Feature>Features()`, never an inline `Config.get`.
 2. `social_login` needs a bridge: `MagicStarter.useSocialAuth(MagicStarterSocialAuth)`. Without it the provider buttons and the Connected accounts hub row never render. `magic_social_auth` publishes the bridge; the starter never calls its `signOut()`, so the bridge signs its SDK out itself.
-3. `billing` needs `billing.web_origin`, an absolute URL with no trailing slash. Unset, Stripe rejects the relative return URL and the error is only logged: the checkout button does nothing. `billing.billable` is `'user'` or `'team'`, must equal the backend's, and any other value throws `StateError`.
+3. `billing` needs `billing.web_origin`, an absolute URL with no trailing slash. Unset or empty, the billing screen hides the web checkout button; a relative value makes Stripe refuse the return URL and the error is only logged, so the button does nothing. `billing.billable` is `'user'` or `'team'`, must equal the backend's, and any other value throws `StateError`.
 4. `billing` registers the `teams.billing` view key and no route. The host registers a page at `MagicStarterConfig.billingRoute()` (`routes.billing`, default `/teams/billing`) and puts a `MagicStarterBillingController` in the container first (Recipes), since the view resolves its controller and cannot construct one.
 5. `notifications` makes the provider declare `<notifications.external_id_prefix><user id>` as the push identity on every `Auth.stateNotifier` change and release it on any sign-out, account deletion included. The prefix defaults to `user_` and must equal the backend's `MAGIC_STARTER_EXTERNAL_ID_PREFIX`: a mismatch is accepted by OneSignal and delivered to nobody. A blank value resolves to `user_`.
 6. `support` needs `registerMagicStarterSupportRoutes()` in the route provider; `starter:install` adds it only when `support` was chosen at install. Every `support_*` option needs `support`.
@@ -46,7 +46,7 @@ Requires Dart >=3.13, Flutter >=3.47 and `magic` ^1.0.0, in an app already scaff
 1. The route groups name the middleware `auth` and `guest`. Register them with `Kernel.registerAll({'auth': () => EnsureAuthenticated(), 'guest': () => RedirectIfAuthenticated()})`; `starter:install` writes this into `lib/app/kernel.dart`.
 2. Call `registerMagicStarterAuthRoutes()` and `registerMagicStarterProfileRoutes()` always, and the team, notification and support functions freely: each returns early while its toggle is off. None takes an argument.
 3. Paths come from config: `routes.auth_prefix` (`/auth`), `routes.profile_prefix` (`/settings`), `routes.teams_prefix` (`/teams`), `routes.notifications_prefix`, `routes.login`, `routes.home`. Build links with `MagicStarterConfig.*Route()`, never a literal path.
-4. `EnsureAuthenticated` sends a signed-out visitor to `routes.login` and records the location with `MagicRouter.setIntendedUrl`; every sign-in lands there, or on `routes.home`. The login and register screens also honour `?next=<in-app path>`.
+4. `EnsureAuthenticated` sends a signed-out visitor to `routes.login` and records the location with `MagicRouter.setIntendedUrl`; every sign-in lands there, or on `routes.home`. The login and register screens also honour `?next=<in-app path>`. `starter:install` registers its own `lib/app/middleware/` copies instead, which record no intended URL and do not let a guest through; register the package classes for this behaviour.
 5. Put a host page inside the starter's shell with `layout: (child) => MagicStarter.view.makeLayout('layout.app', child: child)` and `layoutId: MagicStarterLayoutIds.app`. A different `layoutId` is a separate shell, which rebuilds the layout on every move between them.
 
 ## View registry rules
@@ -56,14 +56,14 @@ Requires Dart >=3.13, Flutter >=3.47 and `magic` ^1.0.0, in an app already scaff
 3. `notifications.list` and `notifications.preferences` live on `magic_notifications`' `Notify.view`. Registering them on `MagicStarter.view` mounts nothing.
 4. A slot adds a widget inside a shipped view: `MagicStarter.view.slot(viewKey, slotName, builder)`, registered before the view builds. Only the names a view reads work (`header` and `footer` on the auth views, the hub, `profile.profile` and the team views; `formFooter` on login and register; `afterSection:members` on `teams.settings`); any other name is inert.
 5. `makeLayout` wraps the child in a route-keyed subtree before your layout sees it, so a replacement layout keeps the remount behaviour. Render the child inside the routed subtree, never in an `Overlay` entry or a nested `Navigator`.
-6. `dart run magic:dowel starter:publish --tag=views:<key>` copies a view into `lib/resources/views/starter/` and registers it in `AppServiceProvider`. The copy does not follow later releases; `starter:doctor` flags a published view nothing registers.
+6. `dart run magic:dowel starter:publish --tag=views:<key>` copies a view into `lib/resources/views/starter/`, rewrites its relative imports to `package:magic_starter/magic_starter.dart`, and registers it in `AppServiceProvider` under an `as published` import (the barrel exports the original under the same class name). The copy does not follow later releases; `starter:doctor` flags a published view nothing registers.
 
 Every key with its condition and widget: `references/views-and-layouts.md`.
 
 ## Theming rules
 
-1. Call `MagicStarter.useWindTheme(windTheme)` (or `useTheme(MagicStarterTheme)`) first, then the single setters. Both unified calls reset the button and field themes, so `useButtonTheme()` and `useFieldTheme()` come after them or the host's standard is lost without an error.
-2. Every `use*Theme()` assigns the whole struct: a field you leave out goes back to its default. Change one string with `MagicStarter.formTheme.copyWith(...)` or `MagicStarter.modalTheme.copyWith(...)`; only those two sub-themes have `copyWith`.
+1. `MagicStarter.useWindTheme(windTheme)` keeps, field by field, what a single setter called before it set. A setter called after it assigns its whole struct, so build that struct from the active theme (`MagicStarter.useLayoutTheme(MagicStarter.layoutTheme.copyWith(...))`) or every field it omits, the Wind-derived colours included, goes back to its stock default. A field set to exactly its stock default, or to exactly what the previous `useWindTheme()` derived for it, reads as unset, and the next `useWindTheme()` replaces it; to keep such a value, set a different one, or set it again after `useWindTheme()` with `copyWith`. `useTheme(MagicStarterTheme)` replaces every sub-theme, so `useButtonTheme()` and `useFieldTheme()` come after it or the host's standard is lost without an error.
+2. Every `use*Theme()` assigns the whole struct: a field you leave out goes back to its default. Change one string with `MagicStarter.formTheme.copyWith(...)`, `MagicStarter.modalTheme.copyWith(...)` or the `copyWith` of any other sub-theme.
 3. Page geometry is the host's: set `MagicStarter.manager.pageContainerClassName` once from the string your own pages use (default `'max-w-7xl px-4 lg:px-8 pt-6 sm:pt-8 pb-16'`), and never put a `max-w-*` or page `px-*` on a starter page or component.
 4. Style with the semantic aliases (`bg-surface`, `text-fg`, `bg-primary`, `border-color-border`, ...) from `MagicStarterTokens.defaultAliases`, passed as `WindThemeData(aliases: ...)`. Wind drops an alias the theme lacks silently, so the class paints nothing.
 5. A `className` passed to an `MS` component is appended after the theme and wins on every family it names.

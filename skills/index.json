@@ -154,7 +154,7 @@
         },
         {
             "name": "magic-starter",
-            "description": "Opt-in Magic screens for sign-in, settings, teams, notifications, billing and support, with a view registry, theming and starter:* commands.",
+            "description": "Build with magic_starter: opt-in Magic screens for sign-in, settings, teams, billing and support, plus the view registry.",
             "files": [
                 "SKILL.md",
                 "references/backend-contract.md",
