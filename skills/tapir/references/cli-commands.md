@@ -25,7 +25,7 @@ Start the app with dowel (`./bin/dowel start --device=<dev>`, add `--cdp-port=92
 
 Default output depends on the verb:
 
-- A one-line summary on the action verbs, and it names a no-op instead of ticking it: `Tapped e7 (no observable change)`, `Scrolled e3 (nothing moved: ...)`, `Nothing to pop: already at the root route`, `Navigation to /x not confirmed: <reason>`.
+- A one-line summary on the action verbs, and it names a no-op instead of ticking it: `Tapped e7 (target unchanged)` (no measured change on the target), `Tapped e7 (route changed; run tapir:snap to see it)` (whenever `routeChanged` is true), `Scrolled e3 (nothing moved: ...)`, `Nothing to pop: already at the root route`, `Navigation to /x not confirmed: <reason>`.
 - The YAML tree for `tapir:snap`.
 - JSON for `tapir:find`, `tapir:observe`, `tapir:get_routes`, `tapir:console`, `tapir:exceptions`, `tapir:reset_overlays` and `tapir:hot_reload_and_snap`.
 - A file for `tapir:screenshot` (`-o` is required) and `tapir:perf_trace` (prints the path).
@@ -78,7 +78,7 @@ Flag names match the MCP parameter names (`--timeoutMs`, not `--timeout`), excep
 ./bin/dowel tapir:find --key="login-submit"
 ```
 
-`tapir:screenshot` takes `--format=jpeg|png` and `--quality`; without `--format` the format follows the `-o` extension, and a mismatch warns. On web with a `cdpPort` it falls back to CDP `Page.captureScreenshot`, clipped to `--ref` and `--rect`.
+`tapir:screenshot` takes `--format=jpeg|png` and `--quality`; without `--format` the format follows the `-o` extension, and a mismatch warns. On web with a `cdpPort` it falls back to CDP `Page.captureScreenshot`, clipped to `--ref` and `--rect`. `--strict` exits 1 without writing the file when the app is not producing frames (the stale-frame banner); on web it only covers `--ref` captures, because a full-viewport browser capture carries no frame signal.
 
 ### Pointer
 
@@ -146,6 +146,7 @@ Flag names match the MCP parameter names (`--timeoutMs`, not `--timeout`), excep
 
 ```bash
 ./bin/dowel tapir:console --minLevel=WARNING --limit=20
+./bin/dowel tapir:console --grep=timeout --logger=debugPrint   # filters apply before --limit; "capped": true means the 50-line buffer dropped older output no filter can reach
 ./bin/dowel tapir:exceptions --limit=5
 ./bin/dowel tapir:exceptions --since=2026-11-07T10:00:00Z --clear
 ./bin/dowel tapir:close_app

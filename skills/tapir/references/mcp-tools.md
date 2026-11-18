@@ -59,7 +59,7 @@ The `snapshot` parameter (`full`, `diff`, `none`) overrides `includeSnapshot` on
 | `grep` | string | none | Nodes whose label or value match the regex, plus their ancestors; an invalid regex is matched as text and the payload adds `grepLiteral: true` |
 | `includeEnrichers` | boolean | false | Magic, Wind and custom enricher lines under each ref |
 
-Returns `{ snapshot: "<yaml>", groupId }`. A node line is `- <role> "<label>" [ref=eN]`, roles `textbox`, `checkbox`, `link`, `heading`, `image`, `button`. It may end with ` [offscreen]` or ` [occluded]`, and carry sub-lines `overflow: true` (inside an overflowing ancestor), `typeable: true` (the node `tapir_type` writes to when a field has two nested `textbox` nodes) and `tapOwner: {"x":..,"y":..,"w":..,"h":..}` (a merged boundary's own control). A `MergeSemantics` control is one line on its boundary. When non-fatal render errors were captured the payload adds `renderErrors: {count, recent: [{type, message}], hint}`.
+Returns `{ snapshot: "<yaml>", groupId }`. A node line is `- <role> "<label>" [ref=eN]`, roles `textbox`, `checkbox`, `link`, `heading`, `image`, `button`. A label or value prints escaped (`\n`, `\r`, `\"`, `\\`) so a node is one line, while `tapir_find`, `tapir_wait_for` and `grep` match the raw text: undo the escapes of a label copied from here before passing it on. It may end with ` [offscreen]` or ` [occluded]`, and carry sub-lines `overflow: true` (inside an overflowing ancestor), `typeable: true` (the node `tapir_type` writes to when a field has two nested `textbox` nodes) and `tapOwner: {"x":..,"y":..,"w":..,"h":..}` (a merged boundary's own control). A `MergeSemantics` control is one line on its boundary. When non-fatal render errors were captured the payload adds `renderErrors: {count, recent: [{type, message}], hint}`.
 
 ### tapir_observe
 
@@ -103,7 +103,7 @@ All run the actionability gate and accept `snapshot`, `includeSnapshot` (default
 
 | Tool | Params | Returns | Gesture |
 |:---|:---|:---|:---|
-| `tapir_tap` | `ref`, `retarget` (default true), `until`, `untilTimeoutMs` (default 3000) | `{ ref, effect: {kind: "treeChanged", changed}, untilMatched?, retargeted?, tapPointOutsideOwner? }` | Down, 50ms, Up at the live centre, re-read after the gate |
+| `tapir_tap` | `ref`, `retarget` (default true), `until`, `untilTimeoutMs` (default 3000) | `{ ref, effect: {kind: "treeChanged", changed, routeChanged?}, untilMatched?, retargeted?, tapPointOutsideOwner? }` | Down, 50ms, Up at the live centre, re-read after the gate |
 | `tapir_double_click` | `ref` | `{ ref }` | Two taps about 100ms apart, one gate |
 | `tapir_right_click` | `ref` | `{ ref, button: "right" }` | Secondary mouse button |
 | `tapir_triple_click` | `ref` | `{ ref, clickCount: 3 }` | Three taps about 100ms apart |
@@ -193,7 +193,7 @@ No params. Returns `{ location, title, uri }`. `uri` is the mounted Router's loc
 
 ### tapir_console
 
-`limit` (50), `minLevel` (`INFO`, `WARNING`, `ERROR`). Returns `{ logs: [{ level, message, time, logger }], count }`: the app's own `debugPrint` output (logger `debugPrint`, newest first; a direct Dart `print` does not go through `debugPrint` and is not captured) followed by crumbs log entries when crumbs is wired. The two lists are appended, not sorted by `time`, and the `limit` clip cuts from the end, so a newer crumbs entry can sit below an older buffered one or be cut; sort by `time` yourself when order matters. A direct `developer.log` call is not captured.
+`limit` (50), `minLevel` (`INFO`, `WARNING`, `ERROR`), `grep` (case-insensitive message substring), `logger` (exact logger name; `debugPrint` for captured output); `grep` and `logger` apply before `limit`. The `debugPrint` buffer holds the last 50 lines. The reply carries `capped: true` once it dropped older ones: older output exists that no `limit` and no filter can reach (it stays on every later reply, and does not say this reply was bounded by the buffer). `grep` and `logger` search only what is still in the buffer. Returns `{ logs: [{ level, message, time, logger }], count }`: the app's own `debugPrint` output (logger `debugPrint`; a direct Dart `print` does not go through `debugPrint` and is not captured) merged with crumbs log entries when crumbs is wired, newest first by `time` (an entry with no parseable `time` follows the dated ones), and the `limit` clip keeps the newest. A direct `developer.log` call is not captured.
 
 ### tapir_exceptions
 

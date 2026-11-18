@@ -103,7 +103,7 @@ Read `recentExceptions` even after a clean reload: new code can throw on the nex
 4. tapir_console { minLevel: "WARNING", limit: 50 }
 ```
 
-The exception buffer is cumulative; without `clear` (or a `since` pinned before the action) one boot-time fault is reported against every screen of a sweep. `clear: true` empties only tapir's own buffer, not the crumbs store, so the `since` in step 3 is what keeps an earlier fault that crumbs still holds out of the answer. `tapir_console` lists the app's own `debugPrint` output even without crumbs; HTTP and the rest of the runtime buffers are the `crumbs` skill. There is no streaming tool: poll between actions.
+The exception buffer is cumulative; without `clear` (or a `since` pinned before the action) one boot-time fault is reported against every screen of a sweep. `clear: true` empties only tapir's own buffer, not the crumbs store, so the `since` in step 3 is what keeps an earlier fault that crumbs still holds out of the answer. `tapir_console` lists the app's own `debugPrint` output even without crumbs, from a buffer of the last 50 lines: `grep` and `logger` narrow what is still in that buffer, and `capped: true` in the reply means older lines were already dropped and no filter can reach them; HTTP and the rest of the runtime buffers are the `crumbs` skill. There is no streaming tool: poll between actions.
 
 ## Before and after a change
 
@@ -123,7 +123,7 @@ For a visual check, `tapir_screenshot { ref: "e7", format: "png" }` before and a
 | `not stable (rect changed by Xpx)` | Wait for the animation (`tapir_wait_for { textGone: ... }`), retry; an endless animation takes `checkStable: false` |
 | `not enabled` | Change the state that disables it; a retry fails the same way |
 | `Query handle ref=qN is stale` | Find or observe again with broader predicates |
-| A success with `effect.changed: false` | Nothing observable moved: check `checks`, `tapPointOutsideOwner`, `warnings` before trying again |
+| A success with `effect.changed: false` | No measured field of the target changed (label, value, enabled, checked, route name). With `routeChanged: true` a dialog, sheet, menu or page moved on the root navigator or the one holding the target, so snap. Without it the tap may still have acted: a route on a different nested navigator or an unmeasured property is not detected. Take a `tapir:snap` (or `tapir:get_routes`) and check `checks`, `tapPointOutsideOwner`, `warnings` before retrying the tap |
 | `warnings` present | Frames are off; follow its `hint` (web: CDP `Page.bringToFront`), then retry |
 
 ## Field rules from real runs
