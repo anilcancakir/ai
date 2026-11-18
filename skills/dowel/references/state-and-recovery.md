@@ -28,7 +28,7 @@ dowel keeps mutable state outside the source tree: the session directory `~/.dow
 | `stdinPipe` | FIFO path; `reload` and `hot-restart` write into it, so hand-written state without it cannot hot restart |
 | `vmServiceUri` | `ws://host:port/<token>/ws`; null while `booting` |
 | `booting` | Present and true between the spawn and the URI landing: the record is incomplete, not wrong |
-| `webPort`, `vmServicePort` | Recorded for every device; `webPort` is passed to flutter for `chrome` only; `vmServicePort` defaults to 8181 |
+| `webPort`, `vmServicePort` | Recorded for every device; `webPort` is passed to flutter for `chrome` only; `vmServicePort` is the port requested with `--vm-service-port` (default 8181), not necessarily the one in `vmServiceUri`: connect to the `vmServiceUri` port, because a device that forwards no device-side port (desktop and web-server sessions, for example) ignores the request, and `start` warns only when `--vm-service-port` was passed explicitly (no warning does not mean the port is reserved) |
 | `device`, `profile`, `startedAt`, `projectRoot` | Target device, `debug` or `static`, ISO 8601 time, absolute project path |
 | `chromePid`, `tmpProfileDir`, `cdpPort` | Set by `start --cdp-port`, null otherwise |
 | `flutterArgs` | The `--flutter-arg` values; absent when there were none |
@@ -54,10 +54,11 @@ dowel keeps mutable state outside the source tree: the session directory `~/.dow
 | Stamp mismatch | The key `<sha256(pubspec.lock)>:<4th word of dart --version>` changed |
 | `pubspec.yaml` newer than the stamp | Edited after the last build |
 | `lib/app/_plugins.g.dart` newer than the stamp | Regenerated after the last build |
+| `lib/app/commands/_index.g.dart` newer than the stamp | The index was edited or regenerated after the last build |
 
 A build takes `.dowel/.dowel.lock` (an atomic `mkdir`), runs `dart build cli -t bin/dispatcher.dart` into `.dowel/cli-bundle.build.<pid>`, swaps it in by rename, writes the stamp and `exec`s the binary. The lock is released before the `exec`, so a long-lived `mcp:serve` never holds it. A dead owner's lock is reclaimed through a PID probe; a live owner is waited on for `DOWEL_LOCK_TIMEOUT` seconds (default 600), then the call fails naming its pid. The wait prints `dowel: waiting for another dowel invocation to finish...` on stderr. If it never clears, regenerate a wrapper that predates the release lock with `dart run dowel make:fast-cli --force`, or `rm -rf .dowel/.dowel.lock`.
 
-`plugins:refresh` (so `plugin:install` too) and `plugin:uninstall` purge the bundle, `make:fast-cli --force` rebuilds it, and `commands:refresh` does neither. If `./bin/dowel` does not see a command you just generated, run `rm -rf .dowel/cli-bundle .dowel/build.stamp && ./bin/dowel list`, or use `dart run :dispatcher <cmd>`.
+`plugins:refresh` (so `plugin:install` too) and `plugin:uninstall` purge the bundle and the stamp; `commands:refresh` and `make:command` delete only the stamp, and the old bundle stays until the rebuild replaces it. Either way the next `./bin/dowel` call rebuilds; `make:fast-cli --force` rebuilds it at once. If `./bin/dowel` still does not see a command you just generated, run `rm -rf .dowel/cli-bundle .dowel/build.stamp && ./bin/dowel list`, or use `dart run :dispatcher <cmd>`.
 
 ## MCP entry points
 
@@ -90,11 +91,13 @@ Plugin tools missing from `tools/list` (`dowel_list` shows command namespaces an
 
 ## Two projects at once
 
-Each project has its own session directory, so state, log and FIFO do not collide; ports do. Only `--cdp-port` starts probe ports, so give every session its own:
+Each project has its own session directory, so state, log and FIFO do not collide; ports do. Only `--cdp-port` starts probe ports, so give every web session its own `--port` and `--cdp-port`:
 
 ```bash
-./bin/dowel start --device=chrome --port=3100 --cdp-port=9333 --vm-service-port=8181   # project A
-./bin/dowel start --device=chrome --port=3180 --cdp-port=9380 --vm-service-port=8281   # project B
+./bin/dowel start --device=chrome --port=3100 --cdp-port=9333   # project A
+./bin/dowel start --device=chrome --port=3180 --cdp-port=9380   # project B
 ```
+
+`--vm-service-port` separates two projects only on a device that honours it; desktop and web-server sessions, for example, ignore it, and `start` warns when you passed it and the VM Service listens elsewhere.
 
 Run commands from inside the project they belong to. A CLI command that would act on another project's app refuses and names both paths, but plugin tools and `dowel_tinker` over MCP, and a worktree inside the recorded root, are not refused: check `dowel_status` (`projectRoot`, `ownedByThisProject`) before acting. Pass `--state=<path>` to name a session outside the directory.
