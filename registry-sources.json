@@ -35,6 +35,12 @@
             "fluttersdk-telescope"
         ]
     },
+    "magic_analytics": {
+        "repo": "anilcancakir/magic_analytics",
+        "branch": "master",
+        "skill": "magic-analytics",
+        "replaces": []
+    },
     "magic_deeplink": {
         "repo": "anilcancakir/magic_deeplink",
         "branch": "master",
