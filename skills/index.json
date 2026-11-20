@@ -158,6 +158,13 @@
             "files": [
                 "SKILL.md"
             ]
+        },
+        {
+            "name": "magic-analytics",
+            "description": "Send GA4 analytics from a Magic app: GTM on web, Firebase on mobile, one Analytics facade, ad signals always denied.",
+            "files": [
+                "SKILL.md"
+            ]
         }
     ]
 }
